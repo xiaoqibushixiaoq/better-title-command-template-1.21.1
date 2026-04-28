@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "better-title-command",
+	"version": "${version}",
+	"name": "Better Title Command",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/better-title-command/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.better.title.command.BetterTitleCommand"
+		],
+		"client": [
+			"com.better.title.command.client.BetterTitleCommandClient"
+		],
+		"fabric-datagen": [
+			"com.better.title.command.client.BetterTitleCommandDataGenerator"
+		]
+	},
+	"mixins": [
+		"better-title-command.mixins.json",
+		{
+			"config": "better-title-command.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
