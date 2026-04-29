@@ -48,6 +48,10 @@ public class CustomTitleRenderer {
         }
         
         boolean shouldRemove() {
+            // 如果displayTime为-1，表示永久显示，不自动移除
+            if (displayTime < 0) {
+                return false;
+            }
             return timer > fadeInTime + displayTime + fadeOutTime;
         }
         
@@ -58,7 +62,15 @@ public class CustomTitleRenderer {
                 return 0.0f;  // 第0帧也完全透明
             } else if (timer < fadeInTime) {
                 return timer / (float)fadeInTime;
-            } else if (timer > fadeInTime + displayTime) {
+            }
+            
+            // 如果是永久显示（displayTime < 0），淡入后一直保持不透明
+            if (displayTime < 0) {
+                return 1.0f;
+            }
+            
+            // 正常模式：检查是否进入淡出阶段
+            if (timer > fadeInTime + displayTime) {
                 return 1.0f - (timer - fadeInTime - displayTime) / (float)fadeOutTime;
             }
             return 1.0f;
@@ -196,6 +208,7 @@ public class CustomTitleRenderer {
             float groupOffsetY = group.getGroupOffsetY();
             float groupScaleX = group.getGroupScaleX();
             float groupScaleY = group.getGroupScaleY();
+            float groupRotation = group.getGroupRotation();
             
             // 渲染组内的每个文本片段
             for (TextSegment segment : group.getSegments()) {
@@ -207,9 +220,14 @@ public class CustomTitleRenderer {
                 float finalOffsetY = groupOffsetY + segment.getOffsetY();
                 float finalScaleX = groupScaleX * segment.getScaleX();
                 float finalScaleY = groupScaleY * segment.getScaleY();
+                float finalRotation = groupRotation + segment.getRotation();
                 
                 guiGraphics.pose().translate(screenWidth / 2.0f + finalOffsetX, screenHeight / 2.0f + finalOffsetY, 0);
                 guiGraphics.pose().scale(finalScaleX, finalScaleY, 1.0f);
+                // 应用旋转（将角度转换为弧度）
+                if (finalRotation != 0) {
+                    guiGraphics.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(finalRotation));
+                }
                 
                 // 渲染文本
                 Component text = segment.getText();

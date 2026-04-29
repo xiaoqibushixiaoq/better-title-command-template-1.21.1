@@ -33,7 +33,7 @@ public class GroupedTitleCommand {
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("groupId", StringArgumentType.string())
                         .then(Commands.argument("text", ComponentArgument.textComponent(registryAccess))
-                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f, 10, 60, 20))
+                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 10, 60, 20))
                             .then(Commands.argument("offsetX", FloatArgumentType.floatArg())
                                 .then(Commands.argument("offsetY", FloatArgumentType.floatArg())
                                     .then(Commands.argument("scaleX", FloatArgumentType.floatArg())
@@ -44,10 +44,11 @@ public class GroupedTitleCommand {
                                                 FloatArgumentType.getFloat(context, "offsetY"),
                                                 FloatArgumentType.getFloat(context, "scaleX"),
                                                 FloatArgumentType.getFloat(context, "scaleY"),
+                                                0.0f, // rotation
                                                 10, 60, 20
                                             ))
                                             .then(Commands.argument("fadeIn", IntegerArgumentType.integer(0))
-                                                .then(Commands.argument("stay", IntegerArgumentType.integer(0))
+                                                .then(Commands.argument("stay", IntegerArgumentType.integer(-1))
                                                     .then(Commands.argument("fadeOut", IntegerArgumentType.integer(0))
                                                         .executes(context -> executeAddText(
                                                             context,
@@ -55,10 +56,24 @@ public class GroupedTitleCommand {
                                                             FloatArgumentType.getFloat(context, "offsetY"),
                                                             FloatArgumentType.getFloat(context, "scaleX"),
                                                             FloatArgumentType.getFloat(context, "scaleY"),
+                                                            0.0f, // rotation
                                                             IntegerArgumentType.getInteger(context, "fadeIn"),
                                                             IntegerArgumentType.getInteger(context, "stay"),
                                                             IntegerArgumentType.getInteger(context, "fadeOut")
                                                         ))
+                                                        .then(Commands.argument("rotation", FloatArgumentType.floatArg())
+                                                            .executes(context -> executeAddText(
+                                                                context,
+                                                                FloatArgumentType.getFloat(context, "offsetX"),
+                                                                FloatArgumentType.getFloat(context, "offsetY"),
+                                                                FloatArgumentType.getFloat(context, "scaleX"),
+                                                                FloatArgumentType.getFloat(context, "scaleY"),
+                                                                FloatArgumentType.getFloat(context, "rotation"),
+                                                                IntegerArgumentType.getInteger(context, "fadeIn"),
+                                                                IntegerArgumentType.getInteger(context, "stay"),
+                                                                IntegerArgumentType.getInteger(context, "fadeOut")
+                                                            ))
+                                                        )
                                                     )
                                                 )
                                             )
@@ -111,13 +126,13 @@ public class GroupedTitleCommand {
     /**
      * 添加文本到组
      */
-    private static int executeAddText(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY, int fadeIn, int stay, int fadeOut) throws CommandSyntaxException {
+    private static int executeAddText(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY, float rotation, int fadeIn, int stay, int fadeOut) throws CommandSyntaxException {
         Component text = ComponentArgument.getComponent(context, "text");
         String groupId = StringArgumentType.getString(context, "groupId");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
         
         // 创建文本片段和组
-        TextSegment segment = new TextSegment(text, offsetX, offsetY, scaleX, scaleY);
+        TextSegment segment = new TextSegment(text, offsetX, offsetY, scaleX, scaleY, rotation);
         TextGroup group = new TextGroup(groupId);
         group.addSegment(segment);
         

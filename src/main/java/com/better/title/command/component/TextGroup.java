@@ -16,6 +16,7 @@ public class TextGroup {
     private float groupOffsetY = 0.0f;
     private float groupScaleX = 1.0f;
     private float groupScaleY = 1.0f;
+    private float groupRotation = 0.0f; // 组级别旋转
     
     public TextGroup(String groupId) {
         this.groupId = groupId;
@@ -60,6 +61,13 @@ public class TextGroup {
     }
     
     /**
+     * 设置组级别旋转
+     */
+    public void setGroupRotation(float rotation) {
+        this.groupRotation = rotation;
+    }
+    
+    /**
      * 获取组偏移X
      */
     public float getGroupOffsetX() {
@@ -85,6 +93,13 @@ public class TextGroup {
      */
     public float getGroupScaleY() {
         return groupScaleY;
+    }
+    
+    /**
+     * 获取组旋转
+     */
+    public float getGroupRotation() {
+        return groupRotation;
     }
     
     /**

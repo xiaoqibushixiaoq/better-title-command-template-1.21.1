@@ -40,6 +40,7 @@ public class TransformNetworkHandler {
                     buf.writeFloat(group.getGroupOffsetY());
                     buf.writeFloat(group.getGroupScaleX());
                     buf.writeFloat(group.getGroupScaleY());
+                    buf.writeFloat(group.getGroupRotation());
                     // 写入片段数量
                     buf.writeInt(group.getSegments().size());
                     // 写入每个片段
@@ -52,6 +53,7 @@ public class TransformNetworkHandler {
                         buf.writeFloat(segment.getOffsetY());
                         buf.writeFloat(segment.getScaleX());
                         buf.writeFloat(segment.getScaleY());
+                        buf.writeFloat(segment.getRotation());
                     }
                 }
                 // 写入时间参数
@@ -74,8 +76,10 @@ public class TransformNetworkHandler {
                     float groupOffsetY = buf.readFloat();
                     float groupScaleX = buf.readFloat();
                     float groupScaleY = buf.readFloat();
+                    float groupRotation = buf.readFloat();
                     group.setGroupOffset(groupOffsetX, groupOffsetY);
                     group.setGroupScale(groupScaleX, groupScaleY);
+                    group.setGroupRotation(groupRotation);
                     
                     // 读取片段数量
                     int segmentCount = buf.readInt();
@@ -89,7 +93,8 @@ public class TransformNetworkHandler {
                         float offsetY = buf.readFloat();
                         float scaleX = buf.readFloat();
                         float scaleY = buf.readFloat();
-                        group.addSegment(new TextSegment(text, offsetX, offsetY, scaleX, scaleY));
+                        float rotation = buf.readFloat();
+                        group.addSegment(new TextSegment(text, offsetX, offsetY, scaleX, scaleY, rotation));
                     }
                     
                     groups.put(groupId, group);

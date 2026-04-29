@@ -11,13 +11,19 @@ public class TextSegment {
     private final float offsetY;
     private final float scaleX;
     private final float scaleY;
+    private final float rotation; // 旋转角度（度）
     
     public TextSegment(Component text, float offsetX, float offsetY, float scaleX, float scaleY) {
+        this(text, offsetX, offsetY, scaleX, scaleY, 0.0f);
+    }
+    
+    public TextSegment(Component text, float offsetX, float offsetY, float scaleX, float scaleY, float rotation) {
         this.text = text;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.scaleX = scaleX;
         this.scaleY = scaleY;
+        this.rotation = rotation;
     }
     
     public Component getText() {
@@ -38,5 +44,9 @@ public class TextSegment {
     
     public float getScaleY() {
         return scaleY;
+    }
+    
+    public float getRotation() {
+        return rotation;
     }
 }
