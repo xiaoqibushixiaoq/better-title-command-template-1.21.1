@@ -5,6 +5,7 @@ import com.better.title.command.component.TextSegment;
 import com.better.title.command.network.TransformNetworkHandler;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -32,7 +33,7 @@ public class GroupedTitleCommand {
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("groupId", StringArgumentType.string())
                         .then(Commands.argument("text", ComponentArgument.textComponent(registryAccess))
-                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f))
+                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f, 10, 60, 20))
                             .then(Commands.argument("offsetX", FloatArgumentType.floatArg())
                                 .then(Commands.argument("offsetY", FloatArgumentType.floatArg())
                                     .then(Commands.argument("scaleX", FloatArgumentType.floatArg())
@@ -42,8 +43,25 @@ public class GroupedTitleCommand {
                                                 FloatArgumentType.getFloat(context, "offsetX"),
                                                 FloatArgumentType.getFloat(context, "offsetY"),
                                                 FloatArgumentType.getFloat(context, "scaleX"),
-                                                FloatArgumentType.getFloat(context, "scaleY")
+                                                FloatArgumentType.getFloat(context, "scaleY"),
+                                                10, 60, 20
                                             ))
+                                            .then(Commands.argument("fadeIn", IntegerArgumentType.integer(0))
+                                                .then(Commands.argument("stay", IntegerArgumentType.integer(0))
+                                                    .then(Commands.argument("fadeOut", IntegerArgumentType.integer(0))
+                                                        .executes(context -> executeAddText(
+                                                            context,
+                                                            FloatArgumentType.getFloat(context, "offsetX"),
+                                                            FloatArgumentType.getFloat(context, "offsetY"),
+                                                            FloatArgumentType.getFloat(context, "scaleX"),
+                                                            FloatArgumentType.getFloat(context, "scaleY"),
+                                                            IntegerArgumentType.getInteger(context, "fadeIn"),
+                                                            IntegerArgumentType.getInteger(context, "stay"),
+                                                            IntegerArgumentType.getInteger(context, "fadeOut")
+                                                        ))
+                                                    )
+                                                )
+                                            )
                                         )
                                     )
                                 )
@@ -93,7 +111,7 @@ public class GroupedTitleCommand {
     /**
      * 添加文本到组
      */
-    private static int executeAddText(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY) throws CommandSyntaxException {
+    private static int executeAddText(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY, int fadeIn, int stay, int fadeOut) throws CommandSyntaxException {
         Component text = ComponentArgument.getComponent(context, "text");
         String groupId = StringArgumentType.getString(context, "groupId");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
@@ -106,7 +124,7 @@ public class GroupedTitleCommand {
         for (ServerPlayer player : targets) {
             Map<String, TextGroup> groups = new HashMap<>();
             groups.put(groupId, group);
-            TransformNetworkHandler.sendTitle(player, groups, 10, 60, 20);
+            TransformNetworkHandler.sendTitle(player, groups, fadeIn, stay, fadeOut);
         }
         
         return 1;

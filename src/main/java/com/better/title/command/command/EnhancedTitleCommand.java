@@ -5,6 +5,7 @@ import com.better.title.command.component.TextSegment;
 import com.better.title.command.network.TransformNetworkHandler;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandBuildContext;
@@ -29,7 +30,7 @@ public class EnhancedTitleCommand {
             Commands.literal("enhanced_title")
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("text", ComponentArgument.textComponent(registryAccess))
-                        .executes(context -> executeSimpleTitle(context, 0.0f, 0.0f, 1.0f, 1.0f))
+                        .executes(context -> executeSimpleTitle(context, 0.0f, 0.0f, 1.0f, 1.0f, 10, 60, 20))
                         .then(Commands.argument("offsetX", FloatArgumentType.floatArg())
                             .then(Commands.argument("offsetY", FloatArgumentType.floatArg())
                                 .then(Commands.argument("scaleX", FloatArgumentType.floatArg())
@@ -39,8 +40,25 @@ public class EnhancedTitleCommand {
                                             FloatArgumentType.getFloat(context, "offsetX"),
                                             FloatArgumentType.getFloat(context, "offsetY"),
                                             FloatArgumentType.getFloat(context, "scaleX"),
-                                            FloatArgumentType.getFloat(context, "scaleY")
+                                            FloatArgumentType.getFloat(context, "scaleY"),
+                                            10, 60, 20
                                         ))
+                                        .then(Commands.argument("fadeIn", IntegerArgumentType.integer(0))
+                                            .then(Commands.argument("stay", IntegerArgumentType.integer(0))
+                                                .then(Commands.argument("fadeOut", IntegerArgumentType.integer(0))
+                                                    .executes(context -> executeSimpleTitle(
+                                                        context,
+                                                        FloatArgumentType.getFloat(context, "offsetX"),
+                                                        FloatArgumentType.getFloat(context, "offsetY"),
+                                                        FloatArgumentType.getFloat(context, "scaleX"),
+                                                        FloatArgumentType.getFloat(context, "scaleY"),
+                                                        IntegerArgumentType.getInteger(context, "fadeIn"),
+                                                        IntegerArgumentType.getInteger(context, "stay"),
+                                                        IntegerArgumentType.getInteger(context, "fadeOut")
+                                                    ))
+                                                )
+                                            )
+                                        )
                                     )
                                 )
                             )
@@ -55,7 +73,7 @@ public class EnhancedTitleCommand {
     /**
      * 执行简单title命令（单个文本片段）
      */
-    private static int executeSimpleTitle(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY) throws CommandSyntaxException {
+    private static int executeSimpleTitle(CommandContext<CommandSourceStack> context, float offsetX, float offsetY, float scaleX, float scaleY, int fadeIn, int stay, int fadeOut) throws CommandSyntaxException {
         Component text = ComponentArgument.getComponent(context, "text");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
         
@@ -67,7 +85,7 @@ public class EnhancedTitleCommand {
         for (ServerPlayer player : targets) {
             Map<String, TextGroup> groups = new java.util.HashMap<>();
             groups.put("default", group);
-            TransformNetworkHandler.sendTitle(player, groups, 10, 60, 20);
+            TransformNetworkHandler.sendTitle(player, groups, fadeIn, stay, fadeOut);
         }
         
         return 1;
