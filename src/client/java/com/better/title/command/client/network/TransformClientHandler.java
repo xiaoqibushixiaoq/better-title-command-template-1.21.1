@@ -27,6 +27,13 @@ public class TransformClientHandler {
     public static void handleTitleTransform(TransformNetworkHandler.TitleTransformPayload payload, ClientPlayNetworking.Context context) {
         context.client().execute(() -> {
             CustomTitleRenderer titleRenderer = getRenderer();
+            
+            // 如果groups为空，清除所有
+            if (payload.groups().isEmpty()) {
+                titleRenderer.clearAll();
+                return;
+            }
+            
             // 使用累加模式，保留现有的组
             titleRenderer.addOrUpdateGroups(
                 payload.groups(),

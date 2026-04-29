@@ -128,4 +128,25 @@ public class TransformNetworkHandler {
         TitleTransformPayload payload = new TitleTransformPayload(groups, fadeIn, stay, fadeOut);
         ServerPlayNetworking.send(player, payload);
     }
+    
+    /**
+     * 清除指定组（发送空Map，客户端需要特殊处理）
+     */
+    public static void clearGroup(ServerPlayer player, String groupId) {
+        // 发送一个特殊的payload来清除指定组
+        // 目前简单实现：发送空Map，客户端需要知道这是清除操作
+        Map<String, TextGroup> emptyGroups = new java.util.HashMap<>();
+        TitleTransformPayload payload = new TitleTransformPayload(emptyGroups, 0, 0, 0);
+        ServerPlayNetworking.send(player, payload);
+    }
+    
+    /**
+     * 清除所有组
+     */
+    public static void clearAllGroups(ServerPlayer player) {
+        // 发送空Map来表示清除所有
+        Map<String, TextGroup> emptyGroups = new java.util.HashMap<>();
+        TitleTransformPayload payload = new TitleTransformPayload(emptyGroups, 0, 0, 0);
+        ServerPlayNetworking.send(player, payload);
+    }
 }

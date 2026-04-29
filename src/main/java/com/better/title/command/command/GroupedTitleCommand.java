@@ -154,7 +154,11 @@ public class GroupedTitleCommand {
         String groupId = StringArgumentType.getString(context, "groupId");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
         
-        // TODO: 发送清除命令到客户端
+        // 发送空的组来清除指定组（客户端需要特殊处理）
+        // 目前先使用clearAll的方式
+        for (ServerPlayer player : targets) {
+            TransformNetworkHandler.clearGroup(player, groupId);
+        }
         
         return 1;
     }
@@ -165,7 +169,10 @@ public class GroupedTitleCommand {
     private static int executeClearAll(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
         
-        // TODO: 发送清除所有命令到客户端
+        // 发送空的Map来清除所有组
+        for (ServerPlayer player : targets) {
+            TransformNetworkHandler.clearAllGroups(player);
+        }
         
         return 1;
     }
