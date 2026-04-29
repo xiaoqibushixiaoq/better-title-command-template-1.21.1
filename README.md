@@ -1,133 +1,185 @@
 # Better Title Command
 
-一个 Minecraft 1.21.1 Fabric 模组，为文本组件添加 X/Y 偏移和 X/Y 缩放功能。
+一个Minecraft 1.21.1 Fabric模组，提供增强的title命令功能，支持文本组管理、变换效果和永久显示。
 
 ## 功能特性
 
-✨ **变换文本组件**
-- X轴偏移 (offsetX)
-- Y轴偏移 (offsetY) 
-- X轴缩放 (scaleX)
-- Y轴缩放 (scaleY)
+- ✅ **多文本组支持** - 同时显示和管理多个文本组
+- ✅ **自定义变换** - 支持位置偏移、缩放和旋转
+- ✅ **时间控制** - 可配置淡入、显示、淡出时间
+- ✅ **永久显示** - 文本可以永久显示直到手动清除
+- ✅ **运行时修改** - 可在运行时修改组的参数而不影响其他设置
+- ✅ **独立计时器** - 每个组有独立的显示时间和动画
 
-🎮 **增强命令**
-- `/enhanced_title title` - 显示带变换的标题
-- `/enhanced_title actionbar` - 显示带变换的动作栏文本
+## 命令列表
 
-💻 **开发者 API**
-- 完整的 Java API
-- 工具类简化使用
-- 支持序列化和网络传输
-
-## 快速开始
-
-### 安装
-
-1. 确保已安装 Fabric Loader 0.19.2+ 和 Fabric API
-2. 将 mod jar 文件放入 `.minecraft/mods` 文件夹
-3. 启动游戏
-
-### 使用命令
+### 1. `/title_group` - 创建或添加文本组
 
 ```mcfunction
-# 基础用法 - 支持普通文本、本地化键名、样式等
-/enhanced_title title "Hello World"
-
-# 本地化文本
-/enhanced_title title {"translate":"menu.title"}
-
-# 带样式的文本
-/enhanced_title title {"text":"警告","color":"red","bold":true}
-
-# 带偏移和缩放
-/enhanced_title title "Hello World" 10.0 5.0 1.5 1.5
-# 参数: 文本组件, offsetX, offsetY, scaleX, scaleY
-
-# Actionbar
-/enhanced_title actionbar {"text":"连击!","color":"yellow"} 0.0 0.0 1.2 1.2
+/title_group <targets> <groupId> <text> [offsetX] [offsetY] [scaleX] [scaleY] [fadeIn] [stay] [fadeOut] [rotation]
 ```
 
-**支持的文本组件类型：**
-- ✅ 普通文本字符串
-- ✅ 本地化键名（翻译）
-- ✅ 带样式的文本（颜色、粗体、斜体等）
-- ✅ 复合文本（多个部分组合）
-- ✅ 点击事件和悬停提示
-- ✅ 分数、选择器、按键绑定等特殊文本
+**参数说明：**
+- `targets`: 目标玩家（如 @a, @s, @p）
+- `groupId`: 组的唯一标识符（字符串）
+- `text`: 要显示的文本组件
+- `offsetX/offsetY`: X/Y轴偏移量（默认: 0）
+- `scaleX/scaleY`: X/Y轴缩放比例（默认: 1.0）
+- `fadeIn`: 淡入时间（ticks，默认: 10）
+- `stay`: 显示时间（ticks，-1表示永久，默认: -1）
+- `fadeOut`: 淡出时间（ticks，默认: 20）
+- `rotation`: 旋转角度（度，默认: 0）
 
-### 代码示例
+**示例：**
+```mcfunction
+# 创建一个永久显示的金色标题
+/title_group @s header {"text":"Welcome!","color":"gold"} 0 -80 2.0 2.0 10 -1 0
 
-```java
-import com.better.title.command.component.TransformedText;
-import com.better.title.command.component.TransformedTexts;
-import net.minecraft.text.Text;
-
-// 创建变换文本
-Text text = TransformedTexts.of(
-    Text.literal("Hello!"),
-    10.0f,   // X偏移
-    5.0f,    // Y偏移
-    1.5f,    // X缩放
-    1.5f     // Y缩放
-);
+# 创建一个带旋转的文本
+/title_group @s rotated {"text":"Spinning","color":"aqua"} 0 0 1.5 1.5 10 60 20 45
 ```
 
-## 文档
+### 2. `/title_group_transform` - 修改组的变换参数
 
-- [详细使用指南](USAGE.md) - 完整的功能说明和示例
-- [文本组件示例](TEXT_COMPONENT_EXAMPLES.md) - 各种文本组件格式的详细示例
-- [快速参考](QUICK_REFERENCE.md) - 命令语法和常用示例速查
-
-## 项目结构
-
-```
-src/
-├── main/
-│   ├── java/com/better/title/command/
-│   │   ├── component/           # 文本组件核心类
-│   │   │   ├── TransformedText.java
-│   │   │   ├── TransformedTexts.java
-│   │   │   └── BetterTitleCommandTextTypes.java
-│   │   ├── command/             # 命令注册
-│   │   │   └── EnhancedTitleCommand.java
-│   │   └── BetterTitleCommand.java
-│   └── resources/
-└── client/
-    ├── java/com/better/title/command/client/
-    │   ├── mixin/               # 客户端 Mixin
-    │   │   └── TransformedTextRendererMixin.java
-    │   └── BetterTitleCommandClient.java
-    └── resources/
+**修改所有参数：**
+```mcfunction
+/title_group_transform <targets> <groupId> <offsetX> <offsetY> <scaleX> <scaleY> [rotation]
 ```
 
-## 构建
-
-```bash
-# 构建项目
-./gradlew build
-
-# 运行开发环境
-./gradlew runClient
+**修改单个参数：**
+```mcfunction
+/title_group_transform <targets> <groupId> offsetX <value>
+/title_group_transform <targets> <groupId> offsetY <value>
+/title_group_transform <targets> <groupId> scaleX <value>
+/title_group_transform <targets> <groupId> scaleY <value>
+/title_group_transform <targets> <groupId> rotation <value>
 ```
 
-构建后的 jar 文件位于 `build/libs/` 目录。
+**示例：**
+```mcfunction
+# 只修改X轴偏移
+/title_group_transform @s header offsetX 100
+
+# 只修改旋转角度
+/title_group_transform @s header rotation 90
+
+# 修改所有参数
+/title_group_transform @s header 50 -30 2.5 2.5 45
+```
+
+### 3. `/title_group_modify` - 修改组的文本内容
+
+```mcfunction
+/title_group_modify <targets> <groupId> <text> [offsetX] [offsetY] [scaleX] [scaleY] [rotation]
+```
+
+**注意：** 此命令保留原有的时间参数（fadeIn, stay, fadeOut）
+
+**示例：**
+```mcfunction
+# 修改文本但保持原有变换和时间设置
+/title_group_modify @s header {"text":"New Text","color":"red"}
+```
+
+### 4. `/title_group_clear` - 清除指定组
+
+```mcfunction
+/title_group_clear <targets> <groupId>
+```
+
+**示例：**
+```mcfunction
+/title_group_clear @s header
+```
+
+### 5. `/title_group_clear_all` - 清除所有组
+
+```mcfunction
+/title_group_clear_all <targets>
+```
+
+**示例：**
+```mcfunction
+/title_group_clear_all @s
+```
+
+## 使用技巧
+
+### 1. 永久显示文本
+设置 `stay=-1` 让文本永久显示：
+```mcfunction
+/title_group @s permanent {"text":"Always Visible","color":"green"} 0 0 2.0 2.0 10 -1 0
+```
+
+### 2. 多层文本效果
+使用不同的groupId创建多层文本：
+```mcfunction
+/title_group @s bg {"text":"Background","color":"gray"} 0 0 3.0 3.0 10 -1 0
+/title_group @s fg {"text":"Foreground","color":"white"} 0 0 2.0 2.0 10 -1 0
+```
+
+### 3. 动态更新
+在不改变时间的情况下更新文本：
+```mcfunction
+# 先创建
+/title_group @s counter {"text":"Count: 1","color":"gold"} 0 0 2.0 2.0 10 -1 0
+
+# 然后修改文本（保持永久显示）
+/title_group_modify @s counter {"text":"Count: 2","color":"gold"}
+```
+
+### 4. 动画效果
+通过快速连续修改参数实现简单动画：
+```mcfunction
+# 创建初始文本
+/title_group @s anim {"text":"Moving","color":"aqua"} 0 0 2.0 2.0 10 -1 0
+
+# 在命令方块中循环执行
+/title_group_transform @s anim offsetX 10
+/title_group_transform @s anim offsetX 20
+/title_group_transform @s anim offsetX 30
+```
 
 ## 技术细节
 
-- **Minecraft 版本**: 1.21.1
-- **Fabric Loader**: 0.19.2+
-- **Fabric API**: 0.116.11+
-- **Java 版本**: 21+
+### 时间参数
+- 所有时间以ticks为单位（1秒 = 20 ticks）
+- `fadeIn=0`: 立即显示，无淡入效果
+- `stay=-1`: 永久显示，不会自动消失
+- `fadeOut=0`: 立即消失，无淡出效果
+
+### 变换参数
+- 偏移量以像素为单位
+- 缩放比例为倍数（1.0 = 原始大小）
+- 旋转角度以度为单位（顺时针）
+
+### 更新机制
+- 使用特殊标记 `(-1, -1, -1)` 来区分更新操作和创建操作
+- 更新操作不会重置计时器或时间参数
+- 客户端智能检测单参数vs多参数更新
+
+## 安装要求
+
+- Minecraft 1.21.1
+- Fabric Loader
+- Fabric API
+
+## 开发信息
+
+本项目使用Fabric MDK模板开发。
+
+**源代码：** [GitHub Repository](https://github.com/xiaoqibushixiaoq/better-title-command-template-1.21.1)
 
 ## 许可证
 
-本项目采用 CC0-1.0 许可证。详情请查看 [LICENSE](LICENSE) 文件。
+本项目采用 MIT 许可证。详见 LICENSE 文件。
 
-## 贡献
+## 版本历史
 
-欢迎提交 Issue 和 Pull Request！
-
-## 联系方式
-
-- 项目主页: [GitHub](https://github.com/yourusername/better-title-command)
-- 问题反馈: [Issues](https://github.com/yourusername/better-title-command/issues)
+### v1.0.0 (首次发布)
+- ✅ 基础文本组功能
+- ✅ 变换效果（偏移、缩放、旋转）
+- ✅ 时间控制（淡入、显示、淡出）
+- ✅ 永久显示模式
+- ✅ 运行时参数修改
+- ✅ 子命令支持单独参数修改

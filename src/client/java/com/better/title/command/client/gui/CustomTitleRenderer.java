@@ -15,6 +15,13 @@ import java.util.Map;
 
 /**
  * 自定义Title渲染器 - 支持多个文本组，每组可独立管理
+ * 
+ * 功能特性：
+ * - 支持多个文本组同时显示
+ * - 每个组有独立的淡入/显示/淡出时间
+ * - 支持永久显示模式（stay=-1）
+ * - 支持文本旋转、缩放、偏移变换
+ * - 支持运行时修改组的参数
  */
 public class CustomTitleRenderer {
     private final Minecraft client;
@@ -85,6 +92,11 @@ public class CustomTitleRenderer {
     
     /**
      * 添加或更新文本组（累加模式）
+     * 
+     * @param newGroups 要添加或更新的文本组映射
+     * @param fadeIn 淡入时间（ticks），0表示立即显示
+     * @param stay 显示时间（ticks），-1表示永久显示
+     * @param fadeOut 淡出时间（ticks），0表示立即消失
      */
     public void addOrUpdateGroups(Map<String, TextGroup> newGroups, int fadeIn, int stay, int fadeOut) {
         // 将新组合并到现有组中

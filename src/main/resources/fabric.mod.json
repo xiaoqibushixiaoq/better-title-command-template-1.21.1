@@ -3,15 +3,16 @@
 	"id": "better-title-command",
 	"version": "${version}",
 	"name": "Better Title Command",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Enhanced title command with text group management, transform effects, and permanent display support.",
 	"authors": [
-		"Me!"
+		"xiaoqibushixiaoq"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/xiaoqibushixiaoq/better-title-command-template-1.21.1",
+		"sources": "https://github.com/xiaoqibushixiaoq/better-title-command-template-1.21.1",
+		"issues": "https://github.com/xiaoqibushixiaoq/better-title-command-template-1.21.1/issues"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/better-title-command/icon.png",
 	"environment": "*",
 	"entrypoints": {
