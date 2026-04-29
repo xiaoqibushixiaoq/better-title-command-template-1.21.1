@@ -34,7 +34,7 @@ public class CustomTitleRenderer {
      * 组计时器 - 记录每个组的显示状态
      */
     private static class GroupTimer {
-        int timer = 0;
+        int timer = -1;  // 从-1开始，确保第一帧不渲染
         int fadeInTime;
         int displayTime;
         int fadeOutTime;
@@ -44,6 +44,7 @@ public class CustomTitleRenderer {
             this.fadeInTime = fadeIn;
             this.displayTime = stay;
             this.fadeOutTime = fadeOut;
+            // timer初始化为-1
         }
         
         boolean shouldRemove() {
@@ -51,7 +52,11 @@ public class CustomTitleRenderer {
         }
         
         float getAlpha() {
-            if (timer < fadeInTime) {
+            if (timer < 0) {
+                return 0.0f;  // 未开始时完全透明
+            } else if (timer == 0) {
+                return 0.0f;  // 第0帧也完全透明
+            } else if (timer < fadeInTime) {
                 return timer / (float)fadeInTime;
             } else if (timer > fadeInTime + displayTime) {
                 return 1.0f - (timer - fadeInTime - displayTime) / (float)fadeOutTime;
@@ -75,10 +80,15 @@ public class CustomTitleRenderer {
             String groupId = entry.getKey();
             TextGroup newGroup = entry.getValue();
             
+            // 如果组已存在，先清除旧的计时器（避免闪烁）
+            if (groups.containsKey(groupId)) {
+                groupTimers.remove(groupId);
+            }
+            
             // 添加或替换组
             groups.put(groupId, newGroup);
             
-            // 为该组创建或更新计时器
+            // 为该组创建新的计时器
             groupTimers.put(groupId, new GroupTimer(fadeIn, stay, fadeOut));
         }
         
@@ -151,6 +161,9 @@ public class CustomTitleRenderer {
                 continue;
             }
             
+            // 先计算alpha（在timer增加之前）
+            float alpha = timer.getAlpha();
+            
             // 更新计时器
             timer.timer++;
             
@@ -160,15 +173,23 @@ public class CustomTitleRenderer {
                 continue;
             }
             
-            hasActiveGroups = true;
-            
-            // 计算透明度
-            float alpha = timer.getAlpha();
+            // 如果alpha太小或为0，跳过渲染
+            // 使用严格大于0的判断，避免极小alpha导致的闪烁
             if (alpha <= 0.0f) {
+                hasActiveGroups = true;  // 仍然标记为活跃，但不渲染
                 continue;
             }
             
-            int color = Mth.ceil(alpha * 255.0f) << 24 | 0xFFFFFF;
+            // 计算颜色，确保alpha通道至少为4才渲染（避免极淡文本闪烁）
+            int alphaChannel = Mth.ceil(alpha * 255.0f);
+            if (alphaChannel < 4) {
+                hasActiveGroups = true;  // 仍然标记为活跃，但不渲染
+                continue;
+            }
+            
+            hasActiveGroups = true;  // 标记为活跃
+            
+            int color = alphaChannel << 24 | 0xFFFFFF;
             
             // 获取组级别变换
             float groupOffsetX = group.getGroupOffsetX();
