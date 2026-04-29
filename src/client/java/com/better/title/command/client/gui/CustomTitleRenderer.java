@@ -147,6 +147,68 @@ public class CustomTitleRenderer {
     }
     
     /**
+     * 更新组的变换参数（不改变文本内容和计时器）
+     */
+    public void updateGroupTransform(String groupId, float offsetX, float offsetY, float scaleX, float scaleY, float rotation) {
+        TextGroup existingGroup = groups.get(groupId);
+        if (existingGroup != null) {
+            // 更新所有提供的参数
+            // 注意：这个方法应该只在明确知道要更新哪些参数时调用
+            existingGroup.setGroupOffset(offsetX, offsetY);
+            existingGroup.setGroupScale(scaleX, scaleY);
+            existingGroup.setGroupRotation(rotation);
+        }
+    }
+    
+    /**
+     * 更新单个变换参数
+     */
+    public void updateSingleParam(String groupId, String paramName, float value) {
+        TextGroup existingGroup = groups.get(groupId);
+        if (existingGroup != null) {
+            switch (paramName) {
+                case "offsetX":
+                    existingGroup.setGroupOffset(value, existingGroup.getGroupOffsetY());
+                    break;
+                case "offsetY":
+                    existingGroup.setGroupOffset(existingGroup.getGroupOffsetX(), value);
+                    break;
+                case "scaleX":
+                    existingGroup.setGroupScale(value, existingGroup.getGroupScaleY());
+                    break;
+                case "scaleY":
+                    existingGroup.setGroupScale(existingGroup.getGroupScaleX(), value);
+                    break;
+                case "rotation":
+                    existingGroup.setGroupRotation(value);
+                    break;
+            }
+        }
+    }
+    
+    /**
+     * 更新组的文本内容（不改变变换参数和计时器）
+     */
+    public void updateGroupText(String groupId, TextGroup newGroup) {
+        TextGroup existingGroup = groups.get(groupId);
+        if (existingGroup != null) {
+            // 保留现有的变换参数
+            newGroup.setGroupOffset(
+                existingGroup.getGroupOffsetX(),
+                existingGroup.getGroupOffsetY()
+            );
+            newGroup.setGroupScale(
+                existingGroup.getGroupScaleX(),
+                existingGroup.getGroupScaleY()
+            );
+            newGroup.setGroupRotation(existingGroup.getGroupRotation());
+            
+            // 替换组
+            groups.put(groupId, newGroup);
+        }
+    }
+    
+    /**
      * 渲染title
      */
     public void render(GuiGraphics guiGraphics) {
@@ -256,5 +318,9 @@ public class CustomTitleRenderer {
     
     public boolean isVisible() {
         return visible;
+    }
+    
+    public boolean hasGroup(String groupId) {
+        return groups.containsKey(groupId);
     }
 }
