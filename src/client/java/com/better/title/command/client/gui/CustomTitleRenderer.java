@@ -46,12 +46,28 @@ public class CustomTitleRenderer {
         int displayTime;
         int fadeOutTime;
         boolean active = true;
+        long lastTick = -1;  // 记录上次更新的tick时间
         
         GroupTimer(int fadeIn, int stay, int fadeOut) {
             this.fadeInTime = fadeIn;
             this.displayTime = stay;
             this.fadeOutTime = fadeOut;
             // timer初始化为-1
+        }
+        
+        /**
+         * 更新计时器（基于tick而非帧）
+         * @param currentTick 当前游戏tick数
+         * @return 是否应该增加计时器
+         */
+        boolean update(long currentTick) {
+            // 如果是第一次调用或tick发生变化，才更新计时器
+            if (lastTick == -1 || currentTick > lastTick) {
+                lastTick = currentTick;
+                timer++;
+                return true;
+            }
+            return false;
         }
         
         boolean shouldRemove() {
@@ -232,6 +248,9 @@ public class CustomTitleRenderer {
         int screenHeight = guiGraphics.guiHeight();
         Font font = client.font;
         
+        // 获取当前游戏tick数（确保时间不受帧率影响）
+        long currentTick = client.level != null ? client.level.getGameTime() : System.currentTimeMillis() / 50;
+        
         boolean hasActiveGroups = false;
         
         // 收集需要移除的组ID（避免在遍历时修改Map）
@@ -247,11 +266,11 @@ public class CustomTitleRenderer {
                 continue;
             }
             
-            // 先计算alpha（在timer增加之前）
-            float alpha = timer.getAlpha();
+            // 基于tick更新计时器（而非每帧）
+            timer.update(currentTick);
             
-            // 更新计时器
-            timer.timer++;
+            // 先计算alpha
+            float alpha = timer.getAlpha();
             
             // 检查组是否应该移除（先收集，稍后统一删除）
             if (timer.shouldRemove()) {
