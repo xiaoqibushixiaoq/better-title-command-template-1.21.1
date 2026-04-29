@@ -1,6 +1,7 @@
 package com.better.title.command;
 
 import com.better.title.command.command.EnhancedTitleCommand;
+import com.better.title.command.command.GroupedTitleCommand;
 import com.better.title.command.network.TransformNetworkHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -21,6 +22,7 @@ public class BetterTitleCommand implements ModInitializer {
 	public void onInitialize() {
 		// 注册命令
 		CommandRegistrationCallback.EVENT.register(EnhancedTitleCommand::register);
+		CommandRegistrationCallback.EVENT.register(GroupedTitleCommand::register);
 		
 		// 注册网络包Payload类型（服务器端）
 		PayloadTypeRegistry.playS2C().register(TransformNetworkHandler.TitleTransformPayload.TYPE, TransformNetworkHandler.TitleTransformPayload.CODEC);

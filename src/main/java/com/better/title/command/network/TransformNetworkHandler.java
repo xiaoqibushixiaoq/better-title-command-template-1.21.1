@@ -1,48 +1,106 @@
 package com.better.title.command.network;
 
+import com.better.title.command.component.TextGroup;
+import com.better.title.command.component.TextSegment;
+import com.mojang.serialization.JsonOps;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
- * 服务器端网络包 - 发送带变换的title/actionbar到客户端
+ * 服务器端网络包 - 发送带变换的title到客户端
  */
 public class TransformNetworkHandler {
     
-    // Title变换包 - 使用String传输Component
-    public record TitleTransformPayload(String titleJson, String subtitleJson,
-                                       float offsetX, float offsetY, 
-                                       float scaleX, float scaleY,
+    // Title变换包 - 支持多个文本组
+    public record TitleTransformPayload(Map<String, TextGroup> groups,
                                        int fadeIn, int stay, int fadeOut) implements CustomPacketPayload {
         public static final Type<TitleTransformPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("better-title-command", "title_transform"));
         
         public static final StreamCodec<FriendlyByteBuf, TitleTransformPayload> CODEC = StreamCodec.of(
             (buf, payload) -> {
-                buf.writeUtf(payload.titleJson);
-                buf.writeUtf(payload.subtitleJson);
-                buf.writeFloat(payload.offsetX);
-                buf.writeFloat(payload.offsetY);
-                buf.writeFloat(payload.scaleX);
-                buf.writeFloat(payload.scaleY);
+                // 写入组的数量
+                buf.writeInt(payload.groups.size());
+                // 写入每个组
+                for (Map.Entry<String, TextGroup> entry : payload.groups.entrySet()) {
+                    TextGroup group = entry.getValue();
+                    // 写入组ID
+                    buf.writeUtf(entry.getKey());
+                    // 写入组级别变换
+                    buf.writeFloat(group.getGroupOffsetX());
+                    buf.writeFloat(group.getGroupOffsetY());
+                    buf.writeFloat(group.getGroupScaleX());
+                    buf.writeFloat(group.getGroupScaleY());
+                    // 写入片段数量
+                    buf.writeInt(group.getSegments().size());
+                    // 写入每个片段
+                    for (TextSegment segment : group.getSegments()) {
+                        // 使用Codec序列化Component为JSON字符串
+                        var jsonResult = ComponentSerialization.CODEC.encodeStart(JsonOps.INSTANCE, segment.getText());
+                        String json = jsonResult.getOrThrow().toString();
+                        buf.writeUtf(json);
+                        buf.writeFloat(segment.getOffsetX());
+                        buf.writeFloat(segment.getOffsetY());
+                        buf.writeFloat(segment.getScaleX());
+                        buf.writeFloat(segment.getScaleY());
+                    }
+                }
+                // 写入时间参数
                 buf.writeInt(payload.fadeIn);
                 buf.writeInt(payload.stay);
                 buf.writeInt(payload.fadeOut);
             },
-            buf -> new TitleTransformPayload(
-                buf.readUtf(),
-                buf.readUtf(),
-                buf.readFloat(),
-                buf.readFloat(),
-                buf.readFloat(),
-                buf.readFloat(),
-                buf.readInt(),
-                buf.readInt(),
-                buf.readInt()
-            )
+            buf -> {
+                // 读取组的数量
+                int groupCount = buf.readInt();
+                Map<String, TextGroup> groups = new java.util.HashMap<>();
+                
+                // 读取每个组
+                for (int i = 0; i < groupCount; i++) {
+                    String groupId = buf.readUtf();
+                    TextGroup group = new TextGroup(groupId);
+                    
+                    // 读取组级别变换
+                    float groupOffsetX = buf.readFloat();
+                    float groupOffsetY = buf.readFloat();
+                    float groupScaleX = buf.readFloat();
+                    float groupScaleY = buf.readFloat();
+                    group.setGroupOffset(groupOffsetX, groupOffsetY);
+                    group.setGroupScale(groupScaleX, groupScaleY);
+                    
+                    // 读取片段数量
+                    int segmentCount = buf.readInt();
+                    // 读取每个片段
+                    for (int j = 0; j < segmentCount; j++) {
+                        String json = buf.readUtf();
+                        // 使用Codec反序列化Component
+                        var parseResult = ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, com.google.gson.JsonParser.parseString(json));
+                        Component text = parseResult.getOrThrow();
+                        float offsetX = buf.readFloat();
+                        float offsetY = buf.readFloat();
+                        float scaleX = buf.readFloat();
+                        float scaleY = buf.readFloat();
+                        group.addSegment(new TextSegment(text, offsetX, offsetY, scaleX, scaleY));
+                    }
+                    
+                    groups.put(groupId, group);
+                }
+                
+                // 读取时间参数
+                int fadeIn = buf.readInt();
+                int stay = buf.readInt();
+                int fadeOut = buf.readInt();
+                return new TitleTransformPayload(groups, fadeIn, stay, fadeOut);
+            }
         );
         
         @Override
@@ -52,20 +110,22 @@ public class TransformNetworkHandler {
     }
     
     /**
-     * 发送带变换的title（可用于模拟actionbar，通过调整offsetY）
+     * 发送单个文本组
      */
-    public static void sendTitle(ServerPlayer player, Component title, Component subtitle,
-                                float offsetX, float offsetY, float scaleX, float scaleY,
+    public static void sendTitle(ServerPlayer player, TextGroup group,
                                 int fadeIn, int stay, int fadeOut) {
-        // 将Component转换为JSON字符串
-        String titleJson = Component.Serializer.toJson(title, player.registryAccess());
-        String subtitleJson = subtitle != null ? Component.Serializer.toJson(subtitle, player.registryAccess()) : "\"\"";
-        
-        TitleTransformPayload payload = new TitleTransformPayload(
-            titleJson, subtitleJson,
-            offsetX, offsetY, scaleX, scaleY,
-            fadeIn, stay, fadeOut
-        );
+        Map<String, TextGroup> groups = new java.util.HashMap<>();
+        groups.put(group.getGroupId(), group);
+        TitleTransformPayload payload = new TitleTransformPayload(groups, fadeIn, stay, fadeOut);
+        ServerPlayNetworking.send(player, payload);
+    }
+    
+    /**
+     * 发送多个文本组
+     */
+    public static void sendTitle(ServerPlayer player, Map<String, TextGroup> groups,
+                                int fadeIn, int stay, int fadeOut) {
+        TitleTransformPayload payload = new TitleTransformPayload(groups, fadeIn, stay, fadeOut);
         ServerPlayNetworking.send(player, payload);
     }
 }
