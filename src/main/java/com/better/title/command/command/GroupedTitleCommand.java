@@ -33,7 +33,7 @@ public class GroupedTitleCommand {
                 .then(Commands.argument("targets", EntityArgument.players())
                     .then(Commands.argument("groupId", StringArgumentType.string())
                         .then(Commands.argument("text", ComponentArgument.textComponent(registryAccess))
-                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 10, 60, 20))
+                            .executes(context -> executeAddText(context, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 500, 3000, 1000))
                             .then(Commands.argument("offsetX", FloatArgumentType.floatArg())
                                 .then(Commands.argument("offsetY", FloatArgumentType.floatArg())
                                     .then(Commands.argument("scaleX", FloatArgumentType.floatArg())
@@ -45,7 +45,7 @@ public class GroupedTitleCommand {
                                                 FloatArgumentType.getFloat(context, "scaleX"),
                                                 FloatArgumentType.getFloat(context, "scaleY"),
                                                 0.0f, // rotation
-                                                10, 60, 20
+                                                500, 3000, 1000
                                             ))
                                             .then(Commands.argument("fadeIn", IntegerArgumentType.integer(0))
                                                 .then(Commands.argument("stay", IntegerArgumentType.integer(-1))

@@ -47,11 +47,11 @@ public class CustomTitleRenderer {
         int fadeOutTime;      // 淡出时间（毫秒）
         boolean active = true;
         
-        GroupTimer(int fadeInTicks, int stayTicks, int fadeOutTicks) {
-            // 将ticks转换为毫秒（1 tick = 50ms）
-            this.fadeInTime = fadeInTicks * 50;
-            this.displayTime = stayTicks < 0 ? -1 : stayTicks * 50;
-            this.fadeOutTime = fadeOutTicks * 50;
+        GroupTimer(int fadeInMs, int stayMs, int fadeOutMs) {
+            // 直接使用毫秒值
+            this.fadeInTime = fadeInMs;
+            this.displayTime = stayMs;
+            this.fadeOutTime = fadeOutMs;
         }
         
         /**
@@ -121,9 +121,9 @@ public class CustomTitleRenderer {
      * 添加或更新文本组（累加模式）
      * 
      * @param newGroups 要添加或更新的文本组映射
-     * @param fadeIn 淡入时间（ticks），0表示立即显示
-     * @param stay 显示时间（ticks），-1表示永久显示
-     * @param fadeOut 淡出时间（ticks），0表示立即消失
+     * @param fadeIn 淡入时间（毫秒），0表示立即显示
+     * @param stay 显示时间（毫秒），-1表示永久显示
+     * @param fadeOut 淡出时间（毫秒），0表示立即消失
      */
     public void addOrUpdateGroups(Map<String, TextGroup> newGroups, int fadeIn, int stay, int fadeOut) {
         // 将新组合并到现有组中
