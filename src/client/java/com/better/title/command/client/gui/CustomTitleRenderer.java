@@ -41,50 +41,61 @@ public class CustomTitleRenderer {
      * 组计时器 - 记录每个组的显示状态
      */
     private static class GroupTimer {
-        int timer = -1;  // 从-1开始，确保第一帧不渲染
-        int fadeInTime;
-        int displayTime;
-        int fadeOutTime;
+        long startTime = -1;  // 开始时间（毫秒）
+        int fadeInTime;       // 淡入时间（毫秒）
+        int displayTime;      // 显示时间（毫秒），-1表示永久
+        int fadeOutTime;      // 淡出时间（毫秒）
         boolean active = true;
-        long lastTick = -1;  // 记录上次更新的tick时间
         
-        GroupTimer(int fadeIn, int stay, int fadeOut) {
-            this.fadeInTime = fadeIn;
-            this.displayTime = stay;
-            this.fadeOutTime = fadeOut;
-            // timer初始化为-1
+        GroupTimer(int fadeInTicks, int stayTicks, int fadeOutTicks) {
+            // 将ticks转换为毫秒（1 tick = 50ms）
+            this.fadeInTime = fadeInTicks * 50;
+            this.displayTime = stayTicks < 0 ? -1 : stayTicks * 50;
+            this.fadeOutTime = fadeOutTicks * 50;
         }
         
         /**
-         * 更新计时器（基于tick而非帧）
-         * @param currentTick 当前游戏tick数
-         * @return 是否应该增加计时器
+         * 初始化计时器
+         * @param currentTime 当前时间（毫秒）
          */
-        boolean update(long currentTick) {
-            // 如果是第一次调用或tick发生变化，才更新计时器
-            if (lastTick == -1 || currentTick > lastTick) {
-                lastTick = currentTick;
-                timer++;
-                return true;
+        void init(long currentTime) {
+            if (startTime == -1) {
+                startTime = currentTime;
             }
-            return false;
         }
         
-        boolean shouldRemove() {
+        /**
+         * 获取经过的时间（毫秒）
+         * @param currentTime 当前时间（毫秒）
+         * @return 经过的时间
+         */
+        long getElapsedTime(long currentTime) {
+            if (startTime == -1) {
+                return 0;
+            }
+            return currentTime - startTime;
+        }
+        
+        boolean shouldRemove(long currentTime) {
             // 如果displayTime为-1，表示永久显示，不自动移除
             if (displayTime < 0) {
                 return false;
             }
-            return timer > fadeInTime + displayTime + fadeOutTime;
+            long elapsed = getElapsedTime(currentTime);
+            return elapsed > fadeInTime + displayTime + fadeOutTime;
         }
         
-        float getAlpha() {
-            if (timer < 0) {
-                return 0.0f;  // 未开始时完全透明
-            } else if (timer == 0) {
-                return 0.0f;  // 第0帧也完全透明
-            } else if (timer < fadeInTime) {
-                return timer / (float)fadeInTime;
+        float getAlpha(long currentTime) {
+            long elapsed = getElapsedTime(currentTime);
+            
+            // 未开始或刚开始时完全透明
+            if (elapsed <= 0) {
+                return 0.0f;
+            }
+            
+            // 淡入阶段
+            if (elapsed < fadeInTime && fadeInTime > 0) {
+                return (float)elapsed / (float)fadeInTime;
             }
             
             // 如果是永久显示（displayTime < 0），淡入后一直保持不透明
@@ -93,8 +104,8 @@ public class CustomTitleRenderer {
             }
             
             // 正常模式：检查是否进入淡出阶段
-            if (timer > fadeInTime + displayTime) {
-                return 1.0f - (timer - fadeInTime - displayTime) / (float)fadeOutTime;
+            if (elapsed > fadeInTime + displayTime && fadeOutTime > 0) {
+                return 1.0f - (float)(elapsed - fadeInTime - displayTime) / (float)fadeOutTime;
             }
             return 1.0f;
         }
@@ -248,8 +259,8 @@ public class CustomTitleRenderer {
         int screenHeight = guiGraphics.guiHeight();
         Font font = client.font;
         
-        // 获取当前游戏tick数（确保时间不受帧率影响）
-        long currentTick = client.level != null ? client.level.getGameTime() : System.currentTimeMillis() / 50;
+        // 获取当前系统时间（毫秒）- 基于真实时间而非tick
+        long currentTime = System.currentTimeMillis();
         
         boolean hasActiveGroups = false;
         
@@ -266,14 +277,14 @@ public class CustomTitleRenderer {
                 continue;
             }
             
-            // 基于tick更新计时器（而非每帧）
-            timer.update(currentTick);
+            // 初始化计时器（如果是第一次）
+            timer.init(currentTime);
             
-            // 先计算alpha
-            float alpha = timer.getAlpha();
+            // 计算alpha值
+            float alpha = timer.getAlpha(currentTime);
             
             // 检查组是否应该移除（先收集，稍后统一删除）
-            if (timer.shouldRemove()) {
+            if (timer.shouldRemove(currentTime)) {
                 groupsToRemove.add(groupId);
                 continue;
             }
