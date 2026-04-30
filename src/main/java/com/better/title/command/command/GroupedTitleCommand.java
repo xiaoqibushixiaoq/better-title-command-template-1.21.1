@@ -287,27 +287,9 @@ public class GroupedTitleCommand {
         String groupId = StringArgumentType.getString(context, "groupId");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
         
-        // 创建一个空的组，只包含要更新的单个参数
+        // 创建一个空的组，设置单参数更新标记
         TextGroup group = new TextGroup(groupId);
-        
-        // 根据参数名设置对应的值（其他值保持默认，客户端会保留原有值）
-        switch (paramName) {
-            case "offsetX":
-                group.setGroupOffset(value, 0); // offsetY设为0，但客户端会保留原值
-                break;
-            case "offsetY":
-                group.setGroupOffset(0, value);
-                break;
-            case "scaleX":
-                group.setGroupScale(value, 1);
-                break;
-            case "scaleY":
-                group.setGroupScale(1, value);
-                break;
-            case "rotation":
-                group.setGroupRotation(value);
-                break;
-        }
+        group.setUpdateParam(paramName, value);
         
         for (ServerPlayer player : targets) {
             Map<String, TextGroup> groups = new HashMap<>();

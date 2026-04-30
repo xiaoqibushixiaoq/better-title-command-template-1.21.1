@@ -18,6 +18,10 @@ public class TextGroup {
     private float groupScaleY = 1.0f;
     private float groupRotation = 0.0f; // 组级别旋转
     
+    // 用于单参数更新的标记
+    private String updateParamName = null; // "offsetX", "offsetY", "scaleX", "scaleY", "rotation", or null
+    private float updateParamValue = 0.0f;
+    
     public TextGroup(String groupId) {
         this.groupId = groupId;
         this.segments = new ArrayList<>();
@@ -46,18 +50,28 @@ public class TextGroup {
     
     /**
      * 设置组级别偏移
+     * 如果参数为Float.MAX_VALUE，则保留原有值（用于单参数更新）
      */
     public void setGroupOffset(float offsetX, float offsetY) {
-        this.groupOffsetX = offsetX;
-        this.groupOffsetY = offsetY;
+        if (offsetX != Float.MAX_VALUE) {
+            this.groupOffsetX = offsetX;
+        }
+        if (offsetY != Float.MAX_VALUE) {
+            this.groupOffsetY = offsetY;
+        }
     }
     
     /**
      * 设置组级别缩放
+     * 如果参数为Float.MAX_VALUE，则保留原有值（用于单参数更新）
      */
     public void setGroupScale(float scaleX, float scaleY) {
-        this.groupScaleX = scaleX;
-        this.groupScaleY = scaleY;
+        if (scaleX != Float.MAX_VALUE) {
+            this.groupScaleX = scaleX;
+        }
+        if (scaleY != Float.MAX_VALUE) {
+            this.groupScaleY = scaleY;
+        }
     }
     
     /**
@@ -121,5 +135,27 @@ public class TextGroup {
      */
     public int size() {
         return segments.size();
+    }
+    
+    /**
+     * 设置单参数更新标记
+     */
+    public void setUpdateParam(String paramName, float value) {
+        this.updateParamName = paramName;
+        this.updateParamValue = value;
+    }
+    
+    /**
+     * 获取要更新的参数名
+     */
+    public String getUpdateParamName() {
+        return updateParamName;
+    }
+    
+    /**
+     * 获取要更新的参数值
+     */
+    public float getUpdateParamValue() {
+        return updateParamValue;
     }
 }

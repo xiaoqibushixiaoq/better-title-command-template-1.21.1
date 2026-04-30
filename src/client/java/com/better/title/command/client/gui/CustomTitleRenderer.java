@@ -187,15 +187,22 @@ public class CustomTitleRenderer {
     
     /**
      * 更新组的变换参数（不改变文本内容和计时器）
+     * 支持使用Float.MAX_VALUE标记不需要更新的参数
      */
     public void updateGroupTransform(String groupId, float offsetX, float offsetY, float scaleX, float scaleY, float rotation) {
         TextGroup existingGroup = groups.get(groupId);
         if (existingGroup != null) {
-            // 更新所有提供的参数
-            // 注意：这个方法应该只在明确知道要更新哪些参数时调用
-            existingGroup.setGroupOffset(offsetX, offsetY);
-            existingGroup.setGroupScale(scaleX, scaleY);
-            existingGroup.setGroupRotation(rotation);
+            // 如果参数是MAX_VALUE，保留原有值；否则使用新值
+            float finalOffsetX = (offsetX == Float.MAX_VALUE) ? existingGroup.getGroupOffsetX() : offsetX;
+            float finalOffsetY = (offsetY == Float.MAX_VALUE) ? existingGroup.getGroupOffsetY() : offsetY;
+            float finalScaleX = (scaleX == Float.MAX_VALUE) ? existingGroup.getGroupScaleX() : scaleX;
+            float finalScaleY = (scaleY == Float.MAX_VALUE) ? existingGroup.getGroupScaleY() : scaleY;
+            float finalRotation = (rotation == Float.MAX_VALUE) ? existingGroup.getGroupRotation() : rotation;
+            
+            // 更新参数
+            existingGroup.setGroupOffset(finalOffsetX, finalOffsetY);
+            existingGroup.setGroupScale(finalScaleX, finalScaleY);
+            existingGroup.setGroupRotation(finalRotation);
         }
     }
     
@@ -364,5 +371,12 @@ public class CustomTitleRenderer {
     
     public boolean hasGroup(String groupId) {
         return groups.containsKey(groupId);
+    }
+    
+    /**
+     * 获取指定的文本组（用于更新操作）
+     */
+    public TextGroup getGroup(String groupId) {
+        return groups.get(groupId);
     }
 }

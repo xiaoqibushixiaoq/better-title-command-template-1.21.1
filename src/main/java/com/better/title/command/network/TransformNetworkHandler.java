@@ -41,6 +41,9 @@ public class TransformNetworkHandler {
                     buf.writeFloat(group.getGroupScaleX());
                     buf.writeFloat(group.getGroupScaleY());
                     buf.writeFloat(group.getGroupRotation());
+                    // 写入单参数更新标记
+                    buf.writeUtf(group.getUpdateParamName() != null ? group.getUpdateParamName() : "");
+                    buf.writeFloat(group.getUpdateParamValue());
                     // 写入片段数量
                     buf.writeInt(group.getSegments().size());
                     // 写入每个片段
@@ -80,6 +83,13 @@ public class TransformNetworkHandler {
                     group.setGroupOffset(groupOffsetX, groupOffsetY);
                     group.setGroupScale(groupScaleX, groupScaleY);
                     group.setGroupRotation(groupRotation);
+                    
+                    // 读取单参数更新标记
+                    String updateParamName = buf.readUtf();
+                    float updateParamValue = buf.readFloat();
+                    if (!updateParamName.isEmpty()) {
+                        group.setUpdateParam(updateParamName, updateParamValue);
+                    }
                     
                     // 读取片段数量
                     int segmentCount = buf.readInt();

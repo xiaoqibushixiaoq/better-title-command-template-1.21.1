@@ -1,6 +1,7 @@
 package com.better.title.command.client.network;
 
 import com.better.title.command.client.gui.CustomTitleRenderer;
+import com.better.title.command.component.TextGroup;
 import com.better.title.command.network.TransformNetworkHandler;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
@@ -24,6 +25,13 @@ public class TransformClientHandler {
     }
     
     /**
+     * 从渲染器中获取现有的TextGroup
+     */
+    private static TextGroup getExistingGroupFromRenderer(CustomTitleRenderer renderer, String groupId) {
+        return renderer.getGroup(groupId);
+    }
+    
+    /**
      * 处理Title变换
      */
     public static void handleTitleTransform(TransformNetworkHandler.TitleTransformPayload payload, ClientPlayNetworking.Context context) {
@@ -39,9 +47,9 @@ public class TransformClientHandler {
             // 检查是否为更新操作（使用特殊标记：fadeIn=-1, stay=-1, fadeOut=-1）
             if (payload.fadeIn() == -1 && payload.stay() == -1 && payload.fadeOut() == -1) {
                 // 更新每个组的变换参数或文本内容
-                for (Map.Entry<String, com.better.title.command.component.TextGroup> entry : payload.groups().entrySet()) {
+                for (Map.Entry<String, TextGroup> entry : payload.groups().entrySet()) {
                     String groupId = entry.getKey();
-                    com.better.title.command.component.TextGroup group = entry.getValue();
+                    TextGroup group = entry.getValue();
                     
                     // 如果组已存在，更新它；否则创建新组
                     if (titleRenderer.hasGroup(groupId)) {
@@ -50,44 +58,39 @@ public class TransformClientHandler {
                             // 有文本内容，更新文本（保留变换参数）
                             titleRenderer.updateGroupText(groupId, group);
                         } else {
-                            // 没有文本内容，判断是单个参数更新还是多个参数更新
-                            // 通过检查是否只有一个非默认值来判断
-                            boolean hasOffset = (group.getGroupOffsetX() != 0 || group.getGroupOffsetY() != 0);
-                            boolean hasScale = (group.getGroupScaleX() != 1.0f || group.getGroupScaleY() != 1.0f);
-                            boolean hasRotation = (group.getGroupRotation() != 0);
+                            // 没有文本内容，检查是否是单参数更新
+                            String updateParamName = group.getUpdateParamName();
                             
-                            int paramCount = 0;
-                            if (hasOffset) paramCount++;
-                            if (hasScale) paramCount++;
-                            if (hasRotation) paramCount++;
-                            
-                            if (paramCount == 1) {
-                                // 单个参数更新
-                                if (hasOffset) {
-                                    if (group.getGroupOffsetX() != 0) {
-                                        titleRenderer.updateSingleParam(groupId, "offsetX", group.getGroupOffsetX());
-                                    } else {
-                                        titleRenderer.updateSingleParam(groupId, "offsetY", group.getGroupOffsetY());
-                                    }
-                                } else if (hasScale) {
-                                    if (group.getGroupScaleX() != 1.0f) {
-                                        titleRenderer.updateSingleParam(groupId, "scaleX", group.getGroupScaleX());
-                                    } else {
-                                        titleRenderer.updateSingleParam(groupId, "scaleY", group.getGroupScaleY());
-                                    }
-                                } else if (hasRotation) {
-                                    titleRenderer.updateSingleParam(groupId, "rotation", group.getGroupRotation());
-                                }
+                            if (updateParamName != null && !updateParamName.isEmpty()) {
+                                // 单参数更新：直接调用updateSingleParam
+                                titleRenderer.updateSingleParam(groupId, updateParamName, group.getUpdateParamValue());
                             } else {
-                                // 多个参数更新
-                                titleRenderer.updateGroupTransform(
-                                    groupId,
-                                    group.getGroupOffsetX(),
-                                    group.getGroupOffsetY(),
-                                    group.getGroupScaleX(),
-                                    group.getGroupScaleY(),
-                                    group.getGroupRotation()
-                                );
+                                // 多参数更新：使用updateGroupTransform
+                                TextGroup existingGroup = titleRenderer.getGroup(groupId);
+                                if (existingGroup != null) {
+                                    float offsetX = group.getGroupOffsetX();
+                                    float offsetY = group.getGroupOffsetY();
+                                    float scaleX = group.getGroupScaleX();
+                                    float scaleY = group.getGroupScaleY();
+                                    float rotation = group.getGroupRotation();
+                                    
+                                    // 只更新非MAX_VALUE的参数
+                                    if (offsetX != Float.MAX_VALUE || offsetY != Float.MAX_VALUE) {
+                                        float finalOffsetX = (offsetX == Float.MAX_VALUE) ? existingGroup.getGroupOffsetX() : offsetX;
+                                        float finalOffsetY = (offsetY == Float.MAX_VALUE) ? existingGroup.getGroupOffsetY() : offsetY;
+                                        existingGroup.setGroupOffset(finalOffsetX, finalOffsetY);
+                                    }
+                                    
+                                    if (scaleX != Float.MAX_VALUE || scaleY != Float.MAX_VALUE) {
+                                        float finalScaleX = (scaleX == Float.MAX_VALUE) ? existingGroup.getGroupScaleX() : scaleX;
+                                        float finalScaleY = (scaleY == Float.MAX_VALUE) ? existingGroup.getGroupScaleY() : scaleY;
+                                        existingGroup.setGroupScale(finalScaleX, finalScaleY);
+                                    }
+                                    
+                                    if (rotation != Float.MAX_VALUE) {
+                                        existingGroup.setGroupRotation(rotation);
+                                    }
+                                }
                             }
                         }
                     } else {
