@@ -1,15 +1,16 @@
 {
-	"required": true,
-	"package": "com.better.title.command.client.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"ExampleClientMixin",
-		"CustomTitleRenderMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
-	}
+  "required": true,
+  "package": "com.better.title.command.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "CustomTitleRenderMixin",
+    "ExampleClientMixin",
+    "TransformedTextRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
 }

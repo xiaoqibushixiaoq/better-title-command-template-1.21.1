@@ -91,8 +91,8 @@ public class TransformClientHandler {
                             }
                         }
                     } else {
-                        // 组不存在，创建新组
-                        titleRenderer.addOrUpdateGroups(payload.groups(), 10, 60, 20);
+                        // 组不存在，创建新组（使用合理的默认时间）
+                        titleRenderer.addOrUpdateGroups(payload.groups(), 500, 3000, 1000);
                     }
                 }
                 return;
